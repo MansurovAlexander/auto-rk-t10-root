@@ -1,0 +1,5 @@
+# Firmware images, APKs and local caches
+*.img
+*.apk
+*.zip
+_cache/
