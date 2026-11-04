@@ -30,8 +30,6 @@
 - [Установка приложения Magisk](#установка-приложения-magisk)
 - [Проверка root](#проверка-root)
 - [Откат на стоковый boot](#откат-на-стоковый-boot)
-- [Постоянный ADB по Wi-Fi](#постоянный-adb-по-wi-fi)
-- [Boot-анимация (опционально)](#boot-анимация-опционально)
 - [Траблшутинг](#траблшутинг)
 - [Ссылки](#ссылки)
 
@@ -42,8 +40,6 @@
 - Magisk **28.0** в `boot_b`, root для приложений и `adb shell`.
 - Прошивка и слот не меняются.
 - `su -c id` → `uid=0(root) ... u:r:magisk:s0`.
-- Опционально: постоянный ADB на `5555` после каждого включения.
-- Опционально: своя boot-анимация из `/bootlogo`.
 
 ## Почему `adb root` не работает
 
@@ -355,71 +351,6 @@ adb reboot
 - USB + `fastboot flash boot stock_boot.img`;
 - либо полная стоковая прошивка через recovery/loader.
 
-## Постоянный ADB по Wi-Fi
-
-Чтобы ADB был доступен после каждого включения на фиксированном порту:
-
-```sh
-adb shell "su -c 'setprop persist.adb.tcp.port 5555'"
-```
-
-Добавьте публичный ключ вашего ПК в `/data/misc/adb/adb_keys`
-(файл `root:shell 0640`), иначе подключение будет `unauthorized`:
-
-```sh
-adb push "$HOME/.android/adbkey.pub" /sdcard/adbkey.pub
-adb shell "su -c 'cat /sdcard/adbkey.pub >> /data/misc/adb/adb_keys; chmod 640 /data/misc/adb/adb_keys; chown root:shell /data/misc/adb/adb_keys'"
-```
-
-После перезагрузки:
-
-```sh
-adb connect <IP>:5555
-```
-
-> **Безопасность:** классический ADB на `5555` идёт **без TLS**. Подключиться
-> может только хост с ключом, но порт виден в локальной сети. Если это критично,
-> не используйте `persist.adb.tcp.port`, а включайте штатную «Отладку по Wi-Fi»
-> с TLS в настройках разработчика.
-
-## Boot-анимация (опционально)
-
-`/bootlogo` на этом ГУ — ext4, смонтирован **rw**, поэтому анимацию можно
-положить без Magisk-модуля:
-
-```text
-/bootlogo/config/bootanimation.zip
-```
-
-Требования:
-
-- zip **stored** (без сжатия), иначе bootanimation ругается;
-- `desc.txt` вида:
-
-```text
-1280 720 30
-p 0 0 part0
-```
-
-- кадры `part0/000.png`, `part0/001.png`, ... в разрешении экрана
-  (здесь 1280×720).
-
-Исходный логотип загрузки лежит в:
-
-```text
-/bootlogo/config/logo/logo_1280x720.ppm
-```
-
-Это P3-заголовок + сырой RGB (не обычный PPM), кадры можно собрать скриптом
-на Pillow.
-
-Откат:
-
-```sh
-adb shell "su -c 'rm /bootlogo/config/bootanimation.zip'"
-adb reboot
-```
-
 ## Траблшутинг
 
 | Симптом | Причина / решение |
@@ -431,7 +362,6 @@ adb reboot
 | Bootloop после прошивки | Boot.img не от той сборки. Верните стоковый boot через `flash_img`/fastboot. |
 | `flash_img` не срабатывает | Сбросьте `flash.success` в `0` перед `vendor.flash.success=2`. |
 | `adb pull` не видит файл | Создайте целевой файл через `touch` от shell до `dd`. |
-| Порт ADB меняется после ребута | Включите `persist.adb.tcp.port=5555` и добавьте ключ в `adb_keys`. |
 
 ## Ссылки
 
