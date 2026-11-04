@@ -53,7 +53,6 @@ adb root -> adbd cannot run as root in production builds
 Старый трюк MTCE/PX5/PX6:
 
 ```sh
-setprop persist.adb.tcp.port 5555
 setprop sys.rkadb.root 1
 reboot
 ```
